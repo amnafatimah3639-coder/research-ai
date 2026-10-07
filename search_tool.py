@@ -1,3 +1,4 @@
+
 """A small CrewAI tool wrapping the DDGS web-search library."""
 
 from typing import Type
