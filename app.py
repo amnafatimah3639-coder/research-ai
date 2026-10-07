@@ -1,9 +1,6 @@
 """A small Streamlit interface for a one-agent CrewAI research report."""
 
 import streamlit as st
-from crewai import Agent, Crew, LLM, Process, Task
-
-from search_tool import DuckDuckGoSearchTool
 
 
 st.set_page_config(page_title="Research Report Builder", page_icon="📚", layout="centered")
@@ -42,6 +39,12 @@ if run:
 
     with st.spinner("Searching the web and preparing your report…"):
         try:
+            # Keep framework imports inside the action so a broken cloud
+            # dependency install produces a useful message in the app.
+            from crewai import Agent, Crew, LLM, Process, Task
+
+            from search_tool import DuckDuckGoSearchTool
+
             llm = LLM(
                 model="groq/openai/gpt-oss-120b",
                 api_key=api_key,
@@ -81,6 +84,14 @@ if run:
             result = crew.kickoff(inputs={"topic": topic.strip()})
             st.markdown(str(result))
             st.caption("Review the linked sources before relying on the report.")
+        except ModuleNotFoundError as exc:
+            missing = exc.name or "an unknown package"
+            st.error(f"A required Python package is missing: `{missing}`.")
+            st.markdown(
+                "Check that `requirements.txt` is committed in the repository root "
+                "(or beside `app.py`), then reboot the Community Cloud app."
+            )
+            st.caption("The full diagnostic is available in Manage app → Logs.")
         except Exception as exc:
             st.error("The report could not be generated.")
             st.code(str(exc))
